@@ -21,7 +21,7 @@ args = parser.parse_args()
 def normalize(s):
    return ''.join((c for c in unicodedata.normalize('NFKD', unicode(s)) if unicodedata.category(c) != 'Mn'))
 
-def fixExtension(file):    
+def fixExtension(file):
     newfile="%s.%s" % (os.path.splitext(file)[0],imghdr.what(file))
     os.rename(file, newfile)
     return newfile
@@ -34,7 +34,9 @@ def readConfig(file):
         name = child.find('name').text
         path = child.find('path').text
         ext = child.find('extension').text
-        pid = child.find('platformid').text
+        pid = child.find('platformid')
+        if pid is not None:
+            pid = pid.text
         if not pid:
             continue
         else:
@@ -106,20 +108,20 @@ def getGameInfo(file,platformID):
     else:
         URL = "http://thegamesdb.net/api/GetGame.php"
         platform = getPlatformName(platformID)
-        if SCUMMVM: 
+        if SCUMMVM:
             title = getScummvmTitle(title)
             args.fix = True #Scummvm doesn't have a proper platformID so we search all
-        if platform == "Arcade" or platform == "NeoGeo": title = getRealArcadeTitle(title)		
-        
+        if platform == "Arcade" or platform == "NeoGeo": title = getRealArcadeTitle(title)
+
         if args.fix:
-            try:                
+            try:
                 fixreq = urllib2.Request("http://thegamesdb.net/api/GetGamesList.php", urllib.urlencode({'name' : title, 'platform' : platform}), headers={'User-Agent' : "RetroPie Scraper Browser"})
                 fixdata=ET.parse(urllib2.urlopen(fixreq)).getroot()
-                if fixdata.find("Game") is not None:        
+                if fixdata.find("Game") is not None:
 
                     #values={ 'id': fixdata.findall("Game/id")[chooseResult(fixdata)].text if args.m else fixdata.find("Game/id").text }
                     values={ 'id': fixdata.findall("Game/id")[chooseResult(fixdata)].text if args.m else fixdata.findall("Game/id")[autoChooseBestResult(fixdata,title)].text }
-					
+
             except:
                 return None
         else:
@@ -160,7 +162,7 @@ def getGamePlatform(nodes):
         return getText(nodes.find("system_title"))
     else:
         return getText(nodes.find("Platform"))
-		
+
 def getScummvmTitle(title):
     print "Fetching real title for %s from scummvm.org" % title
     URL  = "http://scummvm.org/compatibility/DEV/%s" % title.split("-")[0]
@@ -171,7 +173,7 @@ def getScummvmTitle(title):
        return m.groups()[0]
     else:
        print "No title found for %s on scummvm.org" % title
-       return title		
+       return title
 
 def getRealArcadeTitle(title):
     print "Fetching real title for %s from mamedb.com" % title
@@ -261,8 +263,8 @@ def chooseResult(nodes):
         return int(raw_input("Select a result (or press Enter to skip): "))
     else:
         return 0
-		
-		
+
+
 def autoChooseBestResult(nodes,t):
     results=nodes.findall('Game')
     t = t.split('(', 1)[0]
@@ -335,20 +337,20 @@ def scanFiles(SystemInfo):
                 try:
                     filepath=os.path.abspath(os.path.join(root, files))
                     filename = os.path.splitext(files)[0]
-    
+
                     if gamelistExists and not args.f:
                         if skipGame(existinglist,filepath):
                             continue
-    
+
                     print "Trying to identify %s.." % files
-    
+
                     data=getGameInfo(filepath, platformID)
-     
+
                     if data is None:
                         continue
                     else:
                         result=data
-    
+
                     str_title=getTitle(result)
                     str_des=getDescription(result)
                     str_img=getImage(result)
@@ -356,7 +358,7 @@ def scanFiles(SystemInfo):
                     str_pub=getPublisher(result)
                     str_dev=getDeveloper(result)
                     lst_genres=getGenres(result)
-    
+
                     if str_title is not None:
                         game = SubElement(gamelist, 'game')
                         path = SubElement(game, 'path')
@@ -367,41 +369,41 @@ def scanFiles(SystemInfo):
                         publisher=SubElement(game, 'publisher')
                         developer=SubElement(game, 'developer')
                         genres=SubElement(game, 'genres')
-    
+
                         path.text=filepath
                         name.text=str_title
                         print "Game Found: %s" % str_title
-    
+
                     if str_des is not None:
                         desc.text=str_des
-    
+
                     if str_img is not None and args.noimg is False:
                         if args.newpath is True:
                             imgpath="./" + filename+os.path.splitext(str_img)[1]
                         else:
                             imgpath=os.path.abspath(os.path.join(root, filename+os.path.splitext(str_img)[1]))
-    
+
                         print "Downloading boxart.."
-    
+
                         downloadBoxart(str_img,imgpath)
                         imgpath=fixExtension(imgpath)
                         image.text=imgpath
-    
+
                         if args.w:
                             try:
                                 resizeImage(Image.open(imgpath),imgpath)
                             except:
                                 print "Image resize error"
-    
+
                     if str_rd is not None:
                         releasedate.text=str_rd
-    
+
                     if str_pub is not None:
                         publisher.text=str_pub
-    
+
                     if str_dev is not None:
                         developer.text=str_dev
-    
+
                     if lst_genres is not None:
                         for genre in lst_genres:
                             newgenre = SubElement(genres, 'genre')
