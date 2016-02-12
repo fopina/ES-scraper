@@ -16,6 +16,7 @@ parser.add_argument("-p", help="partial scraping (per console)", action='store_t
 parser.add_argument("-m", help="manual mode (choose from multiple results)", action='store_true')
 parser.add_argument('-newpath', help="gamelist & boxart are written in $HOME/.emulationstation/%%NAME%%/", action='store_true')
 parser.add_argument('-fix', help="temporary thegamesdb missing platform fix", action='store_true')
+parser.add_argument("-c", metavar="file", help="Specify es_system.cfg file (defaults to $HOME/.emulationstation/es_systems.cfg)")
 args = parser.parse_args()
 
 def normalize(s):
@@ -420,11 +421,15 @@ def scanFiles(SystemInfo):
         exportList(gamelist)
 
 try:
-    if os.getuid()==0:
-        os.environ['HOME']="/home/"+os.getenv("SUDO_USER")
-    config=open(os.environ['HOME']+"/.emulationstation/es_systems.cfg")
+    if args.c:
+        config_file = args.c
+    else:
+        if os.getuid()==0:
+            os.environ['HOME']="/home/"+os.getenv("SUDO_USER")
+        config_file = os.environ['HOME'] + "/.emulationstation/es_systems.cfg"
+    config=open(config_file)
 except IOError as e:
-    sys.exit("Error when reading config file: %s \nExiting.." % e.strerror)
+    sys.exit("Error when reading config file %s: %s \nExiting.." % (config_file, e.strerror))
 
 ES_systems=readConfig(config)
 print parser.description
