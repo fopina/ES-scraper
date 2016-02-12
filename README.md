@@ -17,6 +17,8 @@ optional arguments:
   -m          manual mode (choose from multiple results)
   -newpath    gamelist.xml & boxart are written in $HOME/.emulationstation/%NAME%/
   -fix        temporary thegamesdb missing platform fix
+  -c file     Specify es_system.cfg file (defaults to
+              $HOME/.emulationstation/es_systems.cfg)
 ```
 
 Quick script written in Python that uses various online sources to scrape artwork and game info and saves it as XML files to be read by EmulationStation.
@@ -33,12 +35,16 @@ Usage
 * Open your systems config file ($HOME/.emulationstation/es_systems.cfg) and append the corresponding [platform ID](#platform-list) to each system:
 
 ```
-NAME=NES
-DESCNAME=Nintendo Entertainment System
-PATH=~/ROMS/NES/
-EXTENSION=.nes
-COMMAND=retroarch -L /path/to/core %ROM%
-PLATFORMID=7
+<system>
+  <name>nes</name>
+  <fullname>Nintendo Entertainment System</fullname>
+  <path>~/ROMS/NES/</path>
+  <extension>.nes</extension>
+  <command>retroarch -L /path/to/core %ROM%</command>
+  <platform>nes</platform>
+  <theme>nes</theme>
+  <platformid>7</platformid>
+</system>
 ```
 
 * Run the script.
